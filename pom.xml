@@ -100,6 +100,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
+                    <outputDirectory>${project.build.directory}/libs</outputDirectory>
                     <archive>
                         <manifest>
                             <mainClass>org.ascencio.demoapp.Launcher</mainClass>
