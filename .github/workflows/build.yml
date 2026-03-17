@@ -1,0 +1,42 @@
+name: Build Portable Accounting App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  build:
+    name: Compilar en ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: Demo-Windows-Portable
+          - os: ubuntu-latest
+            artifact_name: Demo-Linux-Portable
+
+    steps:
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar y recolectar dependencias
+        run: mvn clean package
+
+      - name: Ejecutar JPackage (Crear App Image Portable)
+        run: |
+          jpackage --type app-image --name SistemaDemo --input target/libs --main-jar demo-app-1.0-SNAPSHOT.jar --main-class org.ascencio.demoapp.Launcher --dest target/jpackage
+
+      - name: Subir Carpeta Portable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: target/jpackage/SistemaDemo
