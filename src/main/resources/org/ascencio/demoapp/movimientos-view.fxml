@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20.0" style="-fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.MovimientosController">
+    <padding>
+        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+    </padding>
+    <Button mnemonicParsing="false" onAction="#volverAlMenu" text="⬅ Volver al Menú" styleClass="flat" />
+
+    <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Registrar Nueva Partida" />
+
+    <HBox spacing="15.0" alignment="CENTER_LEFT">
+        <VBox spacing="5.0">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Fecha" />
+            <DatePicker fx:id="dpFecha" prefWidth="150.0" />
+        </VBox>
+        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Concepto General" />
+            <TextField fx:id="txtConcepto" promptText="Ej. Pago de planilla, Compra de mercadería..." />
+        </VBox>
+    </HBox>
+
+    <Separator />
+
+    <HBox spacing="15.0" alignment="BOTTOM_LEFT">
+        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Cuenta Contable" />
+            <ComboBox fx:id="cmbCuenta" maxWidth="Infinity" promptText="Seleccione o busque una cuenta..." />
+        </VBox>
+        <VBox spacing="5.0">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Debe ($)" />
+            <TextField fx:id="txtDebe" prefWidth="120.0" promptText="0.00" />
+        </VBox>
+        <VBox spacing="5.0">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Haber ($)" />
+            <TextField fx:id="txtHaber" prefWidth="120.0" promptText="0.00" />
+        </VBox>
+        <Button mnemonicParsing="false" onAction="#agregarFila" text="Agregar Fila" />
+    </HBox>
+
+    <TableView fx:id="tablaMovimientos" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colCodigo" prefWidth="100.0" text="Código" />
+            <TableColumn fx:id="colCuenta" prefWidth="300.0" text="Cuenta" />
+            <TableColumn fx:id="colDebe" prefWidth="150.0" style="-fx-alignment: CENTER-RIGHT;" text="Debe" />
+            <TableColumn fx:id="colHaber" prefWidth="150.0" style="-fx-alignment: CENTER-RIGHT;" text="Haber" />
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT" spacing="20.0">
+        <Label style="-fx-font-size: 16px; -fx-text-fill: -color-fg-default;" text="Total Debe:" />
+        <Label fx:id="lblTotalDebe" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -color-success-emphasis;" text="\$0.00" />
+
+        <Label style="-fx-font-size: 16px; -fx-text-fill: -color-fg-default;" text="Total Haber:" />
+        <Label fx:id="lblTotalHaber" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -color-danger-emphasis;" text="\$0.00" />
+
+        <Region HBox.hgrow="ALWAYS" />
+
+        <Label fx:id="lblEstado" style="-fx-font-weight: bold;" text="Descuadrado" textFill="RED" />
+        <Button fx:id="btnGuardarPartida" disable="true" mnemonicParsing="false" onAction="#guardarPartidaBD" styleClass="accent" style="-fx-font-size: 16px;" text="Guardar Partida Doble" />
+    </HBox>
+</VBox>

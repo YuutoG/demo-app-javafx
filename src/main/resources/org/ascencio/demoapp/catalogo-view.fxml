@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<SplitPane dividerPositions="0.35" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.CatalogoController"
+           style="-fx-background-color: -color-bg-default;">
+    <VBox spacing="15.0" style="-fx-background-color: -color-bg-default;">
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        </padding>
+        <Button mnemonicParsing="false" onAction="#volverAlMenu" text="⬅ Volver al Menú" styleClass="flat" />
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Nueva Cuenta"/>
+
+        <VBox spacing="5.0" style="-fx-background-color: -color-bg-default;">
+            <Label text="Código de Cuenta (Ej. 1101)"/>
+            <TextField fx:id="txtCodigo" promptText="Código..."/>
+        </VBox>
+
+        <VBox spacing="5.0">
+            <Label text="Nombre de la Cuenta"/>
+            <TextField fx:id="txtNombre" promptText="Ej. Caja General"/>
+        </VBox>
+
+        <VBox spacing="5.0">
+            <Label text="Clasificación"/>
+            <ComboBox fx:id="cmbTipo" maxWidth="Infinity" promptText="Seleccione el tipo..."/>
+        </VBox>
+
+        <Region VBox.vgrow="ALWAYS"/>
+        <Button fx:id="btnGuardar" maxWidth="Infinity" mnemonicParsing="false" onAction="#guardarCuenta"
+                styleClass="accent" text="Guardar Cuenta"/>
+    </VBox>
+
+    <VBox spacing="10.0">
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        </padding>
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Catálogo Actual"/>
+
+        <TableView fx:id="tablaCuentas" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colCodigo" prefWidth="120.0" text="Código"/>
+                <TableColumn fx:id="colNombre" prefWidth="300.0" text="Nombre"/>
+                <TableColumn fx:id="colTipo" prefWidth="150.0" text="Tipo"/>
+            </columns>
+        </TableView>
+    </VBox>
+</SplitPane>

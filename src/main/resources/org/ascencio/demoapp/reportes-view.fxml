@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="30.0" style="-fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.ReportesController">
+    <padding>
+        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+    </padding>
+    <Button mnemonicParsing="false" onAction="#volverAlMenu" text="⬅ Volver al Menú" styleClass="flat" />
+
+    <Label style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Centro de Reportes y Exportación" />
+    <Label style="-fx-font-size: 16px; -fx-text-fill: -color-fg-muted;" text="Exporte la información contable para análisis externo o impresión." />
+
+    <HBox spacing="30.0" VBox.vgrow="ALWAYS">
+
+        <VBox spacing="15.0" style="-fx-border-color: -color-border-default; -fx-border-radius: 10; -fx-border-width: 1; -fx-background-color: -color-bg-subtle;" HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+            </padding>
+            <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Catálogo de Cuentas" />
+            <Label style="-fx-text-fill: -color-fg-muted;" text="Descargue la estructura contable completa de la empresa." wrapText="true" VBox.vgrow="ALWAYS" />
+
+            <HBox spacing="15.0">
+                <Button maxWidth="Infinity" onAction="#exportarCatalogoPDF" styleClass="danger" text="Exportar a PDF" HBox.hgrow="ALWAYS" />
+                <Button maxWidth="Infinity" onAction="#exportarCatalogoCSV" styleClass="success" text="Exportar a CSV" HBox.hgrow="ALWAYS" />
+            </HBox>
+        </VBox>
+
+        <VBox spacing="15.0" style="-fx-border-color: -color-border-default; -fx-border-radius: 10; -fx-border-width: 1; -fx-background-color: -color-bg-subtle;" HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+            </padding>
+            <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Libro Diario (Movimientos)" />
+            <Label style="-fx-text-fill: -color-fg-muted;" text="Exporte todas las partidas contables registradas en el sistema." wrapText="true" VBox.vgrow="ALWAYS" />
+
+            <HBox spacing="15.0">
+                <Button maxWidth="Infinity" onAction="#exportarMovimientosPDF" styleClass="danger" text="Exportar a PDF" HBox.hgrow="ALWAYS" />
+                <Button maxWidth="Infinity" onAction="#exportarMovimientosCSV" styleClass="success" text="Exportar a CSV" HBox.hgrow="ALWAYS" />
+            </HBox>
+        </VBox>
+
+    </HBox>
+</VBox>
