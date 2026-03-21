@@ -12,20 +12,17 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.Objects;
 import java.util.Optional;
 
 public class HelloApplication extends Application {
 
-    private static final String DB_URL = "jdbc:sqlite:mi_contabilidad.db";
+    private static final String DB_URL = "jdbc:sqlite:" + System.getProperty("user.dir") + System.getProperty("file.separator") + "mi_contabilidad.db";
 
     @Override
     public void start(Stage stage) throws IOException {
-        // 1. Inicializamos base de datos primero
         inicializarBaseDeDatos();
-
-        // 2. Activar tema premium
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
-
         Empresa empresaActual = cargarEmpresa();
 
         // 3. Lógica de "Primer Uso"
@@ -45,10 +42,7 @@ public class HelloApplication extends Application {
         // --- INICIO DEL FLUJO NORMAL (Vista Principal) ---
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 900, 600);
-
-        // Pasamos los datos de la empresa al controlador para mostrar la bienvenida
-        HelloController controller = fxmlLoader.getController();
-
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("style.css")).toExternalForm());
         stage.setTitle("Sistema Contable - Portable");
         stage.setScene(scene);
         stage.setMaximized(true);
@@ -146,12 +140,12 @@ public class HelloApplication extends Application {
 
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS catalogo_cuentas (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    empresa_id INTEGER NOT NULL,
-                    codigo TEXT NOT NULL,
-                    nombre TEXT NOT NULL,
-                    tipo TEXT CHECK(tipo IN ('ACTIVO', 'PASIVO', 'PATRIMONIO', 'INGRESO', 'EGRESO')),
-                    FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        empresa_id INTEGER NOT NULL,
+                        codigo TEXT NOT NULL,
+                        nombre TEXT NOT NULL,
+                        tipo TEXT CHECK(tipo IN ('ACTIVO', 'PASIVO', 'PATRIMONIO', 'INGRESO', 'EGRESO', 'CUENTA DE ORDEN Y DE CONTROL DEUDORAS', 'CUENTA DE ORDEN Y DE CONTROL ACREEDORAS')),
+                        FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE
                 )
             """);
 

@@ -28,9 +28,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 public class ReportesController {
 
-    private static final String DB_URL = "jdbc:sqlite:mi_contabilidad.db";
+    private static final String DB_URL = "jdbc:sqlite:" + System.getProperty("user.dir") + System.getProperty("file.separator") + "mi_contabilidad.db";
     private final int EMPRESA_ACTUAL_ID = 1;
 
     // ==========================================
@@ -104,6 +107,69 @@ public class ReportesController {
 
         } catch (Exception e) {
             mostrarAlertaError("Error al exportar PDF: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void exportarCatalogoExcel(ActionEvent event) {
+        File file = mostrarFileChooser(event, "Catalogo_Cuentas.xlsx", "Archivo Excel", "*.xlsx");
+        if (file == null) return;
+
+        String sql = "SELECT codigo, nombre, tipo FROM catalogo_cuentas WHERE empresa_id = ? ORDER BY codigo";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, EMPRESA_ACTUAL_ID);
+            ResultSet rs = pstmt.executeQuery();
+
+            // 1. Crear el libro y la hoja
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("Catálogo de Cuentas");
+
+                // 2. Estilo para los encabezados
+                CellStyle headerStyle = workbook.createCellStyle();
+                org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+                font.setBold(true);
+                headerStyle.setFont(font);
+                headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+                // 3. Crear fila de encabezados
+                Row headerRow = sheet.createRow(0);
+                String[] columns = {"Código", "Nombre de Cuenta", "Clasificación"};
+
+                for (int i = 0; i < columns.length; i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(columns[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                // 4. Llenar los datos
+                int rowNum = 1;
+                while (rs.next()) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(rs.getString("codigo"));
+                    row.createCell(1).setCellValue(rs.getString("nombre"));
+                    row.createCell(2).setCellValue(rs.getString("tipo"));
+                }
+
+                // 5. Ajustar el ancho de las columnas
+                for (int i = 0; i < columns.length; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                // 6. Guardar el archivo
+                try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                    workbook.write(fileOut);
+                }
+
+                mostrarAlertaExito("Catálogo exportado exitosamente a Excel en:\n" + file.getAbsolutePath());
+            }
+
+        } catch (Exception e) {
+            mostrarAlertaError("Error al exportar Excel: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -223,6 +289,79 @@ public class ReportesController {
         }
     }
 
+    @FXML
+    private void exportarMovimientosExcel(ActionEvent event) {
+        File file = mostrarFileChooser(event, "Libro_Diario.xlsx", "Archivo Excel", "*.xlsx");
+        if (file == null) return;
+
+        String sql = """
+            SELECT m.num_partida, m.fecha, c.codigo, c.nombre, m.concepto, m.debe, m.haber 
+            FROM movimientos m 
+            JOIN catalogo_cuentas c ON m.cuenta_id = c.id 
+            WHERE m.empresa_id = ? 
+            ORDER BY m.num_partida, m.id
+        """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, EMPRESA_ACTUAL_ID);
+            ResultSet rs = pstmt.executeQuery();
+
+            // 1. Crear el libro y la hoja de cálculo
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("Libro Diario");
+
+                // 2. Estilo para los encabezados (Negrita y fondo gris)
+                CellStyle headerStyle = workbook.createCellStyle();
+                org.apache.poi.ss.usermodel.Font font = (org.apache.poi.ss.usermodel.Font) workbook.createFont();
+                font.setBold(true);
+                headerStyle.setFont(font);
+                headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+                // 3. Crear fila de encabezados
+                Row headerRow = sheet.createRow(0);
+                String[] columns = {"Partida", "Fecha", "Código", "Cuenta", "Concepto", "Debe", "Haber"};
+
+                for (int i = 0; i < columns.length; i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(columns[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                // 4. Llenar los datos
+                int rowNum = 1;
+                while (rs.next()) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(rs.getInt("num_partida"));
+                    row.createCell(1).setCellValue(rs.getString("fecha"));
+                    row.createCell(2).setCellValue(rs.getString("codigo"));
+                    row.createCell(3).setCellValue(rs.getString("nombre"));
+                    row.createCell(4).setCellValue(rs.getString("concepto"));
+                    row.createCell(5).setCellValue(rs.getDouble("debe"));
+                    row.createCell(6).setCellValue(rs.getDouble("haber"));
+                }
+
+                // 5. Ajustar el ancho de las columnas automáticamente
+                for (int i = 0; i < columns.length; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                // 6. Escribir el archivo físico
+                try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                    workbook.write(fileOut);
+                }
+
+                mostrarAlertaExito("Archivo Excel exportado exitosamente en:\n" + file.getAbsolutePath());
+            }
+
+        } catch (Exception e) {
+            mostrarAlertaError("Error al exportar Excel: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // ==========================================
     // MÉTODOS AUXILIARES
     // ==========================================
@@ -234,7 +373,7 @@ public class ReportesController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(filtroDesc, filtroExt));
 
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        return fileChooser.showSaveDialog(stage);
+        return fileChooser.showSaveDialog(null);
     }
 
     private void mostrarAlertaExito(String mensaje) {
@@ -256,9 +395,11 @@ public class ReportesController {
     private void volverAlMenu(javafx.event.ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader fxmlLoader = new javafx.fxml.FXMLLoader(getClass().getResource("hello-view.fxml"));
-            javafx.scene.Scene scene = new javafx.scene.Scene(fxmlLoader.load(), 900, 600);
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.setScene(scene);
+            javafx.scene.Parent nuevoContenido = fxmlLoader.load();
+
+            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
+            scene.setRoot(nuevoContenido);
+
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }

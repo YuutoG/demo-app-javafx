@@ -4,8 +4,19 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CatalogoController {
 
@@ -20,7 +31,7 @@ public class CatalogoController {
     @FXML private TableColumn<Cuenta, String> colNombre;
     @FXML private TableColumn<Cuenta, String> colTipo;
 
-    private static final String DB_URL = "jdbc:sqlite:mi_contabilidad.db";
+    private static final String DB_URL = "jdbc:sqlite:" + System.getProperty("user.dir") + System.getProperty("file.separator") + "mi_contabilidad.db";
 
     // Lista reactiva para la tabla
     private final ObservableList<Cuenta> listaCuentas = FXCollections.observableArrayList();
@@ -30,13 +41,19 @@ public class CatalogoController {
 
     @FXML
     public void initialize() {
-        // 1. Llenar el ComboBox con el Enum TipoCuenta
         cmbTipo.getItems().setAll(TipoCuenta.values());
+        // 1. Enseñar al ComboBox a mostrar el texto con espacios
+        cmbTipo.setConverter(new javafx.util.StringConverter<TipoCuenta>() {
+            @Override
+            public String toString(TipoCuenta t) { return t == null ? "" : t.getTexto(); }
+            @Override
+            public TipoCuenta fromString(String s) { return null; }
+        });
 
         // 2. Configurar las columnas de la tabla para leer los Java Records
         colCodigo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().codigo()));
         colNombre.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().nombre()));
-        colTipo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().tipo().name()));
+        colTipo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().tipo().getTexto()));
 
         // 3. Vincular la lista a la tabla y cargar datos de SQLite
         tablaCuentas.setItems(listaCuentas);
@@ -64,7 +81,7 @@ public class CatalogoController {
             pstmt.setInt(1, EMPRESA_ACTUAL_ID);
             pstmt.setString(2, codigo);
             pstmt.setString(3, nombre);
-            pstmt.setString(4, tipo.name()); // Guardamos como ACTIVO, PASIVO, etc.
+            pstmt.setString(4, tipo.getTexto());
 
             pstmt.executeUpdate();
 
@@ -83,6 +100,110 @@ public class CatalogoController {
         }
     }
 
+    @FXML
+    private void importarCatalogoExcel(javafx.event.ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Importar Catálogo de Cuentas");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos Excel", "*.xlsx"));
+
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        File file = fileChooser.showOpenDialog(null);
+
+        if (file == null) return;
+
+        // Lista temporal en memoria: No tocamos la base de datos hasta estar seguros
+        List<Cuenta> cuentasAImportar = new ArrayList<>();
+
+        try (FileInputStream fis = new FileInputStream(file);
+             Workbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0); // Leemos la primera pestaña del Excel
+            int filasProcesadas = 0;
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // Saltar la fila 0 (Encabezados)
+
+                // Si la primera celda está vacía, asumimos que terminó la tabla
+                if (row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) break;
+
+                // Extraemos los datos leyendo la celda de forma segura
+                String codigo = leerCelda(row.getCell(0));
+                String nombre = leerCelda(row.getCell(1));
+
+                // Normalizamos la clasificación a MAYÚSCULAS y quitamos espacios extra
+                String clasificacionStr = leerCelda(row.getCell(2)).toUpperCase().trim();
+
+                // Validación 1: Verificar si el Enum existe
+                TipoCuenta tipo;
+                try {
+                    tipo = TipoCuenta.desdeTexto(clasificacionStr);
+                } catch (IllegalArgumentException e) {
+                    mostrarAlerta("Error de Validación",
+                            "La clasificación '" + clasificacionStr + "' en la fila " + (row.getRowNum() + 1) +
+                                    " no es válida.\n\nDebe ser exactamente: ACTIVO, PASIVO, PATRIMONIO, INGRESO o EGRESO.\nLa importación ha sido cancelada.");
+                    return; // ¡Abortamos todo el proceso!
+                }
+
+                // Si pasa la validación, la agregamos a nuestra lista en memoria
+                cuentasAImportar.add(new Cuenta(0, EMPRESA_ACTUAL_ID, codigo, nombre, tipo));
+                filasProcesadas++;
+            }
+
+            if (cuentasAImportar.isEmpty()) {
+                mostrarAlerta("Advertencia", "El archivo Excel parece estar vacío o no tiene datos válidos debajo de la fila de encabezados.");
+                return;
+            }
+
+            // Si llegamos aquí, toda la memoria está validada. Guardamos de golpe.
+            guardarCuentasBatch(cuentasAImportar);
+            cargarDatosDesdeBD(); // Refrescamos la tabla visual
+
+            Alert exito = new Alert(Alert.AlertType.INFORMATION);
+            exito.setTitle("Importación Exitosa");
+            exito.setHeaderText(null);
+            exito.setContentText("Se importaron " + filasProcesadas + " cuentas correctamente al sistema.");
+            exito.showAndWait();
+
+        } catch (Exception e) {
+            mostrarAlerta("Error de Lectura", "No se pudo leer el archivo Excel: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Método para insertar masivamente en SQLite garantizando "Todo o Nada"
+    private void guardarCuentasBatch(List<Cuenta> cuentas) throws SQLException {
+        String sql = "INSERT INTO catalogo_cuentas (empresa_id, codigo, nombre, tipo) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL)) {
+            conn.setAutoCommit(false); // Iniciamos Transacción
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Cuenta cuenta : cuentas) {
+                    pstmt.setInt(1, cuenta.empresaId());
+                    pstmt.setString(2, cuenta.codigo());
+                    pstmt.setString(3, cuenta.nombre());
+                    pstmt.setString(4, cuenta.tipo().getTexto());
+                    pstmt.addBatch(); // Encolamos
+                }
+                pstmt.executeBatch(); // Ejecutamos la cola
+                conn.commit();        // Confirmamos y guardamos físicamente
+            } catch (SQLException e) {
+                conn.rollback();      // Si algo falla, deshacemos lo que llevábamos
+                throw e;
+            }
+        }
+    }
+
+    // Método auxiliar porque Apache POI es muy estricto con los tipos de celda
+    private String leerCelda(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            // Si el código en Excel es "1101", POI lo lee como 1101.0, esto lo convierte a texto "1101"
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            default -> "";
+        };
+    }
+
     private void cargarDatosDesdeBD() {
         listaCuentas.clear();
         String sql = "SELECT * FROM catalogo_cuentas WHERE empresa_id = ?";
@@ -99,7 +220,7 @@ public class CatalogoController {
                         rs.getInt("empresa_id"),
                         rs.getString("codigo"),
                         rs.getString("nombre"),
-                        TipoCuenta.valueOf(rs.getString("tipo")) // Convertir String a Enum
+                        TipoCuenta.desdeTexto(rs.getString("tipo")) // Convertir String a Enum
                 );
                 listaCuentas.add(cuenta);
             }
@@ -127,9 +248,11 @@ public class CatalogoController {
     private void volverAlMenu(javafx.event.ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader fxmlLoader = new javafx.fxml.FXMLLoader(getClass().getResource("hello-view.fxml"));
-            javafx.scene.Scene scene = new javafx.scene.Scene(fxmlLoader.load(), 900, 600);
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.setScene(scene);
+            javafx.scene.Parent nuevoContenido = fxmlLoader.load();
+
+            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
+            scene.setRoot(nuevoContenido);
+
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }

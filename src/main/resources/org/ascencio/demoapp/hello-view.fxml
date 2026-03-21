@@ -2,20 +2,43 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox alignment="CENTER" spacing="40.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.HelloController">
     <padding>
         <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
     </padding>
 
+    <HBox alignment="CENTER_RIGHT" prefWidth="200.0">
+        <Button fx:id="btnTema" mnemonicParsing="false" onAction="#alternarTema" styleClass="flat" style="-fx-font-size: 14px;" text=" Tema Claro">
+            <graphic>
+                <FontIcon fx:id="iconoTema" iconLiteral="mdi2w-weather-sunny" iconSize="18" />
+            </graphic>
+        </Button>
+    </HBox>
+
     <VBox alignment="CENTER" spacing="10.0">
         <Label fx:id="lblBienvenida" style="-fx-font-size: 32px; -fx-font-weight: bold;" text="Bienvenido al Sistema" />
         <Label style="-fx-font-size: 16px; -fx-text-fill: -color-fg-muted;" text="Seleccione el módulo con el que desea trabajar hoy" />
     </VBox>
 
-    <HBox alignment="CENTER" spacing="30.0">
-        <Button onAction="#abrirCatalogo" prefHeight="120.0" prefWidth="220.0" style="-fx-font-size: 18px;" styleClass="accent" text="Catálogo de Cuentas" />
-        <Button onAction="#abrirMovimientos" prefHeight="120.0" prefWidth="220.0" style="-fx-font-size: 18px;" text="Movimientos Contables" />
-        <Button onAction="#abrirReportes" prefHeight="120.0" prefWidth="220.0" style="-fx-font-size: 18px;" styleClass="success" text="Reportería" />
-    </HBox>
+    <VBox alignment="CENTER" spacing="25.0">
+        <Button onAction="#abrirCatalogo" prefHeight="60.0" prefWidth="350.0" style="-fx-font-size: 18px;" styleClass="accent" text="  Catálogo de Cuentas">
+            <graphic>
+                <FontIcon iconLiteral="mdi2b-book-open-page-variant" iconSize="24" />
+            </graphic>
+        </Button>
+
+        <Button onAction="#abrirMovimientos" prefHeight="60.0" prefWidth="350.0" style="-fx-font-size: 18px;" styleClass="accent" text="  Movimientos Contables">
+            <graphic>
+                <FontIcon iconLiteral="mdi2t-transfer" iconSize="24" />
+            </graphic>
+        </Button>
+
+        <Button onAction="#abrirReportes" prefHeight="60.0" prefWidth="350.0" style="-fx-font-size: 18px;" styleClass="accent" text="  Reportería">
+            <graphic>
+                <FontIcon iconLiteral="mdi2f-file-chart" iconSize="24" />
+            </graphic>
+        </Button>
+    </VBox>
 </VBox>

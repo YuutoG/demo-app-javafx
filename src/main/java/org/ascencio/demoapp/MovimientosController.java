@@ -14,10 +14,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.File;
+import java.io.FileReader;
+import javafx.stage.FileChooser;
+import javafx.scene.Node;
+import javafx.stage.Stage;
+
 public class MovimientosController {
 
     @FXML private DatePicker dpFecha;
     @FXML private TextField txtConcepto;
+    @FXML private TableColumn<FilaUI, String> colConcepto;
     @FXML private ComboBox<Cuenta> cmbCuenta;
     @FXML private TextField txtDebe;
     @FXML private TextField txtHaber;
@@ -30,28 +39,32 @@ public class MovimientosController {
     @FXML private Label lblTotalHaber;
     @FXML private Label lblEstado;
     @FXML private Button btnGuardarPartida;
+    @FXML private Button btnCargarDTE;
 
-    private static final String DB_URL = "jdbc:sqlite:mi_contabilidad.db";
+    private static final String DB_URL = "jdbc:sqlite:" + System.getProperty("user.dir") + System.getProperty("file.separator") + "mi_contabilidad.db";
     private final int EMPRESA_ACTUAL_ID = 1;
 
     // Record interno solo para la vista de la tabla
-    public record FilaUI(Cuenta cuenta, BigDecimal debe, BigDecimal haber) {}
+    public record FilaUI(Cuenta cuenta, String concepto, BigDecimal debe, BigDecimal haber) {}
 
-    private ObservableList<FilaUI> listaFilas = FXCollections.observableArrayList();
-    private ObservableList<Cuenta> catalogoCuentas = FXCollections.observableArrayList();
+    private final ObservableList<FilaUI> listaFilas = FXCollections.observableArrayList();
+    private final ObservableList<Cuenta> catalogoCuentas = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         dpFecha.setValue(LocalDate.now());
 
         // 1. Configurar cómo se ven las Cuentas en el ComboBox
-        cmbCuenta.setConverter(new StringConverter<Cuenta>() {
+        cmbCuenta.setConverter(new StringConverter<>() {
             @Override
             public String toString(Cuenta c) {
                 return c == null ? "" : c.codigo() + " - " + c.nombre();
             }
+
             @Override
-            public Cuenta fromString(String s) { return null; }
+            public Cuenta fromString(String s) {
+                return null;
+            }
         });
 
         // 2. Mapear las columnas al Record FilaUI
@@ -59,8 +72,11 @@ public class MovimientosController {
         colCuenta.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().cuenta().nombre()));
         colDebe.setCellValueFactory(cell -> new SimpleStringProperty("$ " + cell.getValue().debe().toString()));
         colHaber.setCellValueFactory(cell -> new SimpleStringProperty("$ " + cell.getValue().haber().toString()));
-
+        colConcepto.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().concepto()));
         tablaMovimientos.setItems(listaFilas);
+        cmbCuenta.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {;
+            btnCargarDTE.setDisable(newValue == null);
+        });
 
         cargarCatalogo();
     }
@@ -92,6 +108,12 @@ public class MovimientosController {
             return;
         }
 
+        String conceptoFila = txtConcepto.getText().trim();
+        if (conceptoFila.isEmpty()) {
+            mostrarAlerta("Debe ingresar un concepto para esta línea.");
+            return;
+        }
+
         try {
             // Parseo seguro a BigDecimal
             String strDebe = txtDebe.getText().isBlank() ? "0" : txtDebe.getText();
@@ -105,10 +127,11 @@ public class MovimientosController {
                 return;
             }
 
-            listaFilas.add(new FilaUI(cuentaSeleccionada, debe, haber));
+            listaFilas.add(new FilaUI(cuentaSeleccionada, conceptoFila, debe, haber));
 
             // Limpiar campos de entrada
             cmbCuenta.getSelectionModel().clearSelection();
+            txtConcepto.clear();
             txtDebe.clear();
             txtHaber.clear();
 
@@ -128,8 +151,8 @@ public class MovimientosController {
             sumaHaber = sumaHaber.add(fila.haber());
         }
 
-        lblTotalDebe.setText("$ " + sumaDebe.toString());
-        lblTotalHaber.setText("$ " + sumaHaber.toString());
+        lblTotalDebe.setText("$ " + sumaDebe);
+        lblTotalHaber.setText("$ " + sumaHaber);
 
         // Validar Partida Doble
         boolean hayDatos = sumaDebe.compareTo(BigDecimal.ZERO) > 0;
@@ -148,8 +171,8 @@ public class MovimientosController {
 
     @FXML
     private void guardarPartidaBD() {
-        if (dpFecha.getValue() == null || txtConcepto.getText().isBlank()) {
-            mostrarAlerta("La fecha y el concepto general son obligatorios.");
+        if (dpFecha.getValue() == null) {
+            mostrarAlerta("La fecha es obligatoria.");
             return;
         }
 
@@ -160,7 +183,7 @@ public class MovimientosController {
         for (FilaUI fila : listaFilas) {
             movimientosPreparados.add(new Movimiento(
                     0, EMPRESA_ACTUAL_ID, fila.cuenta().id(),
-                    dpFecha.getValue(), txtConcepto.getText().trim(),
+                    dpFecha.getValue(), fila.concepto(),
                     fila.debe(), fila.haber(), siguienteNumPartida
             ));
         }
@@ -173,7 +196,6 @@ public class MovimientosController {
             alert.showAndWait();
 
             listaFilas.clear();
-            txtConcepto.clear();
             recalcularTotales();
         }
     }
@@ -222,12 +244,60 @@ public class MovimientosController {
     }
 
     @FXML
+    private void cargarDTE(javafx.event.ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleccionar DTE (JSON)");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos JSON", "*.json"));
+
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        File file = fileChooser.showOpenDialog(null);
+
+        if (file == null) return;
+
+        try (FileReader reader = new FileReader(file)) {
+            // 1. Parsear el archivo como un Objeto JSON
+            JsonObject dteJson = JsonParser.parseReader(reader).getAsJsonObject();
+
+            // 2. Extraer el bloque de identificación
+            JsonObject identificacion = dteJson.getAsJsonObject("identificacion");
+            String numeroControl = identificacion.get("numeroControl").getAsString();
+            String codigoGeneracion = identificacion.get("codigoGeneracion").getAsString();
+            String fecEmi = identificacion.get("fecEmi").getAsString();
+
+            // 3. Extraer el bloque de resumen
+            JsonObject resumen = dteJson.getAsJsonObject("resumen");
+            String totalPagar = resumen.get("totalPagar").getAsString();
+
+            // 4. Mapear a la Interfaz Gráfica
+            dpFecha.setValue(LocalDate.parse(fecEmi));
+            // Concatenamos el número de control y código de generación como pediste
+            txtConcepto.setText("DTE: " + numeroControl + " | " + codigoGeneracion);
+
+            // Colocamos el monto en el Debe por defecto para que el usuario lo revise
+            txtDebe.setText(totalPagar);
+            txtHaber.setText("0.00");
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("DTE Cargado");
+            alert.setHeaderText(null);
+            alert.setContentText("Datos extraídos correctamente.\nPor favor, verifique si el monto pertenece al Debe o al Haber antes de 'Agregar Fila'.");
+            alert.showAndWait();
+
+        } catch (Exception e) {
+            mostrarAlerta("Error al procesar el DTE: Asegúrese de que es un JSON válido del Ministerio de Hacienda.\nDetalle: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void volverAlMenu(javafx.event.ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader fxmlLoader = new javafx.fxml.FXMLLoader(getClass().getResource("hello-view.fxml"));
-            javafx.scene.Scene scene = new javafx.scene.Scene(fxmlLoader.load(), 900, 600);
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.setScene(scene);
+            javafx.scene.Parent nuevoContenido = fxmlLoader.load();
+
+            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
+            scene.setRoot(nuevoContenido);
+
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }

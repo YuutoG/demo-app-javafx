@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox spacing="30.0" style="-fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.ReportesController">
     <padding>
@@ -23,8 +24,21 @@
             <Label style="-fx-text-fill: -color-fg-muted;" text="Descargue la estructura contable completa de la empresa." wrapText="true" VBox.vgrow="ALWAYS" />
 
             <HBox spacing="15.0">
-                <Button maxWidth="Infinity" onAction="#exportarCatalogoPDF" styleClass="danger" text="Exportar a PDF" HBox.hgrow="ALWAYS" />
-                <Button maxWidth="Infinity" onAction="#exportarCatalogoCSV" styleClass="success" text="Exportar a CSV" HBox.hgrow="ALWAYS" />
+                <Button maxWidth="Infinity" onAction="#exportarCatalogoPDF" styleClass="danger" text="  Exportar a PDF" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-pdf-box" iconSize="20" />
+                    </graphic>
+                </Button>
+                <Button maxWidth="Infinity" onAction="#exportarCatalogoExcel" styleClass="success" text="  Exportar a Excel" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-excel-box" iconSize="20" />
+                    </graphic>
+                </Button>
+                <Button maxWidth="Infinity" onAction="#exportarCatalogoCSV" styleClass="accent" text="  Exportar a CSV" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-table-box" iconSize="20" />
+                    </graphic>
+                </Button>
             </HBox>
         </VBox>
 
@@ -36,8 +50,21 @@
             <Label style="-fx-text-fill: -color-fg-muted;" text="Exporte todas las partidas contables registradas en el sistema." wrapText="true" VBox.vgrow="ALWAYS" />
 
             <HBox spacing="15.0">
-                <Button maxWidth="Infinity" onAction="#exportarMovimientosPDF" styleClass="danger" text="Exportar a PDF" HBox.hgrow="ALWAYS" />
-                <Button maxWidth="Infinity" onAction="#exportarMovimientosCSV" styleClass="success" text="Exportar a CSV" HBox.hgrow="ALWAYS" />
+                <Button maxWidth="Infinity" onAction="#exportarMovimientosPDF" styleClass="danger" text="  Exportar a PDF" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-pdf-box" iconSize="20" />
+                    </graphic>
+                </Button>
+                <Button maxWidth="Infinity" onAction="#exportarMovimientosExcel" styleClass="success" text="  Exportar a Excel" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-excel-box" iconSize="20" />
+                    </graphic>
+                </Button>
+                <Button maxWidth="Infinity" onAction="#exportarMovimientosCSV" styleClass="accent" text="  Exportar a CSV" HBox.hgrow="ALWAYS">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-file-table-box" iconSize="20" />
+                    </graphic>
+                </Button>
             </HBox>
         </VBox>
 

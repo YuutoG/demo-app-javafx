@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox spacing="20.0" style="-fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.MovimientosController">
     <padding>
@@ -14,39 +15,50 @@
 
     <HBox spacing="15.0" alignment="CENTER_LEFT">
         <VBox spacing="5.0">
-            <Label style="-fx-text-fill: -color-fg-default;" text="Fecha" />
+            <Label style="-fx-text-fill: -color-fg-default;" text="Fecha de Partida" />
             <DatePicker fx:id="dpFecha" prefWidth="150.0" />
-        </VBox>
-        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-            <Label style="-fx-text-fill: -color-fg-default;" text="Concepto General" />
-            <TextField fx:id="txtConcepto" promptText="Ej. Pago de planilla, Compra de mercadería..." />
         </VBox>
     </HBox>
 
     <Separator />
 
-    <HBox spacing="15.0" alignment="BOTTOM_LEFT">
+    <HBox spacing="10.0" alignment="BOTTOM_LEFT">
         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
             <Label style="-fx-text-fill: -color-fg-default;" text="Cuenta Contable" />
-            <ComboBox fx:id="cmbCuenta" maxWidth="Infinity" promptText="Seleccione o busque una cuenta..." />
+            <ComboBox fx:id="cmbCuenta" maxWidth="200.0" promptText="Seleccione o busque una cuenta..." />
+        </VBox>
+        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+            <Label style="-fx-text-fill: -color-fg-default;" text="Concepto de la línea" />
+            <TextField fx:id="txtConcepto" prefWidth="600.0" promptText="Ej. Factura #123..." />
         </VBox>
         <VBox spacing="5.0">
             <Label style="-fx-text-fill: -color-fg-default;" text="Debe ($)" />
-            <TextField fx:id="txtDebe" prefWidth="120.0" promptText="0.00" />
+            <TextField fx:id="txtDebe" prefWidth="100.0" promptText="0.00" />
         </VBox>
         <VBox spacing="5.0">
             <Label style="-fx-text-fill: -color-fg-default;" text="Haber ($)" />
-            <TextField fx:id="txtHaber" prefWidth="120.0" promptText="0.00" />
+            <TextField fx:id="txtHaber" prefWidth="100.0" promptText="0.00" />
         </VBox>
-        <Button mnemonicParsing="false" onAction="#agregarFila" text="Agregar Fila" />
+        <Button fx:id="btnCargarDTE" disable="true" mnemonicParsing="false" onAction="#cargarDTE" styleClass="success" text="  JSON DTE">
+            <graphic>
+                <FontIcon iconLiteral="mdi2r-receipt" iconSize="20" />
+            </graphic>
+        </Button>
+
+        <Button mnemonicParsing="false" onAction="#agregarFila" styleClass="success" text="  Añadir Fila">
+            <graphic>
+                <FontIcon iconLiteral="mdi2p-plus-circle" iconSize="20" />
+            </graphic>
+        </Button>
     </HBox>
 
     <TableView fx:id="tablaMovimientos" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colCodigo" prefWidth="100.0" text="Código" />
-            <TableColumn fx:id="colCuenta" prefWidth="300.0" text="Cuenta" />
-            <TableColumn fx:id="colDebe" prefWidth="150.0" style="-fx-alignment: CENTER-RIGHT;" text="Debe" />
-            <TableColumn fx:id="colHaber" prefWidth="150.0" style="-fx-alignment: CENTER-RIGHT;" text="Haber" />
+            <TableColumn fx:id="colCodigo" prefWidth="80.0" text="Código" />
+            <TableColumn fx:id="colCuenta" prefWidth="200.0" text="Cuenta" />
+            <TableColumn fx:id="colConcepto" prefWidth="600.0" text="Concepto" />
+            <TableColumn fx:id="colDebe" prefWidth="100.0" style="-fx-alignment: CENTER-RIGHT;" text="Debe" />
+            <TableColumn fx:id="colHaber" prefWidth="100.0" style="-fx-alignment: CENTER-RIGHT;" text="Haber" />
         </columns>
     </TableView>
 
@@ -60,6 +72,10 @@
         <Region HBox.hgrow="ALWAYS" />
 
         <Label fx:id="lblEstado" style="-fx-font-weight: bold;" text="Descuadrado" textFill="RED" />
-        <Button fx:id="btnGuardarPartida" disable="true" mnemonicParsing="false" onAction="#guardarPartidaBD" styleClass="accent" style="-fx-font-size: 16px;" text="Guardar Partida Doble" />
+        <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#guardarPartidaBD" styleClass="accent" text="  Guardar Partida">
+            <graphic>
+                <FontIcon iconLiteral="mdi2c-content-save" iconSize="20" />
+            </graphic>
+        </Button>
     </HBox>
 </VBox>

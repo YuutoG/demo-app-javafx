@@ -1,0 +1,31 @@
+/* --- ESTILOS DE BOTONES DE COLOR ADAPTATIVOS --- */
+
+/* 1. Botón Púrpura (Mapeado a tu clase violeta) */
+.button.button-violeta {
+    -fx-background-color: -color-purple-5 !important;
+    -fx-text-fill: white !important;
+    -fx-icon-color: white !important;
+}
+.button.button-violeta:hover {
+    -fx-background-color: -color-purple-4 !important;
+}
+
+/* 2. Botón Turquesa (Teal sí existe en AtlantaFX) */
+.button.button-turquesa {
+    -fx-background-color: -color-teal-5 !important;
+    -fx-text-fill: white !important;
+    -fx-icon-color: white !important;
+}
+.button.button-turquesa:hover {
+    -fx-background-color: -color-teal-4 !important;
+}
+
+/* 3. Botón Naranja (Mapeado a tu clase coral) */
+.button.button-coral {
+    -fx-background-color: -color-orange-5 !important;
+    -fx-text-fill: white !important;
+    -fx-icon-color: white !important;
+}
+.button.button-coral:hover {
+    -fx-background-color: -color-orange-4 !important;
+}

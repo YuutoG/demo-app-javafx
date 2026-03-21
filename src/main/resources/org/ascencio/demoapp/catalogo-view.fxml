@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <SplitPane dividerPositions="0.35" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.ascencio.demoapp.CatalogoController"
@@ -29,9 +30,19 @@
             <ComboBox fx:id="cmbTipo" maxWidth="Infinity" promptText="Seleccione el tipo..."/>
         </VBox>
 
-        <Region VBox.vgrow="ALWAYS"/>
-        <Button fx:id="btnGuardar" maxWidth="Infinity" mnemonicParsing="false" onAction="#guardarCuenta"
-                styleClass="accent" text="Guardar Cuenta"/>
+        <Region VBox.vgrow="ALWAYS" />
+
+        <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#importarCatalogoExcel" styleClass="success" text="  Importar desde Excel">
+            <graphic>
+                <FontIcon iconLiteral="mdi2f-file-excel" iconSize="20" />
+            </graphic>
+        </Button>
+
+        <Button fx:id="btnGuardar" maxWidth="Infinity" mnemonicParsing="false" onAction="#guardarCuenta" styleClass="accent" text="  Guardar Cuenta">
+            <graphic>
+                <FontIcon iconLiteral="mdi2c-content-save" iconSize="20" />
+            </graphic>
+        </Button>
     </VBox>
 
     <VBox spacing="10.0">

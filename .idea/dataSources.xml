@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="basita.db" uuid="50b4e332-2394-47b5-ba12-b0a372f09c36">
+    <data-source source="LOCAL" name="mi_contabilidad.db" uuid="50b4e332-2394-47b5-ba12-b0a372f09c36">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/basita.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/mi_contabilidad.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
